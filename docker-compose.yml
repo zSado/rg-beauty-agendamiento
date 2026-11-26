@@ -1,0 +1,36 @@
+# Bases de datos para desarrollo local: PostgreSQL (relacional) y MongoDB (no relacional).
+# Solo escuchan en 127.0.0.1. Las claves se leen del archivo .env de esta carpeta (ver .env.example).
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rg_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Define POSTGRES_ADMIN_PASSWORD en .env}
+      POSTGRES_DB: rg_beauty
+      RG_APP_PASSWORD: ${RG_APP_PASSWORD:?Define RG_APP_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rg_admin -d rg_beauty"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: rg_mongo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Define MONGO_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:
